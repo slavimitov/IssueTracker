@@ -1,0 +1,5 @@
+INSERT INTO roles (name) VALUES ('ADMIN');
+INSERT INTO roles (name) VALUES ('PROJECT_MANAGER');
+INSERT INTO roles (name) VALUES ('DEVELOPER');
+INSERT INTO roles (name) VALUES ('TESTER');
+INSERT INTO roles (name) VALUES ('VIEWER');
