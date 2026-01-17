@@ -36,17 +36,18 @@ public class SprintService {
             throw new BadRequestException("Sprint overlaps with existing sprint in the project");
         }
 
+        sprint.setProject(project);
         return sprintRepository.save(sprint);
     }
 
     @Transactional(readOnly = true)
     public List<Sprint> getAllSprints() {
-        return sprintRepository.findAll();
+        return sprintRepository.findAllWithProject();
     }
 
     @Transactional(readOnly = true)
     public Optional<Sprint> getSprintById(Long id) {
-        return sprintRepository.findById(id);
+        return sprintRepository.findByIdWithProject(id);
     }
 
     public Sprint updateSprint(Sprint sprint) {
@@ -57,19 +58,23 @@ public class SprintService {
             throw new BadRequestException("Start date must be before or equal to end date");
         }
 
+        Project project;
         if (!existingSprint.getProject().getId().equals(sprint.getProject().getId())) {
-            Project project = projectRepository.findById(sprint.getProject().getId())
+            project = projectRepository.findById(sprint.getProject().getId())
                     .orElseThrow(() -> new ResourceNotFoundException("Project", sprint.getProject().getId()));
+        } else {
+            project = existingSprint.getProject();
         }
 
         List<Sprint> overlappingSprints = sprintRepository.findOverlappingSprints(
-                sprint.getProject().getId(), sprint.getStartDate(), sprint.getEndDate());
+                project.getId(), sprint.getStartDate(), sprint.getEndDate());
         boolean hasOverlap = overlappingSprints.stream()
                 .anyMatch(s -> !s.getId().equals(sprint.getId()));
         if (hasOverlap) {
             throw new BadRequestException("Sprint overlaps with existing sprint in the project");
         }
 
+        sprint.setProject(project);
         return sprintRepository.save(sprint);
     }
 
