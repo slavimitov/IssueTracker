@@ -128,7 +128,6 @@ class ProjectServiceTest {
     @Test
     void updateProject_ShouldReturnUpdatedProject() {
         when(projectRepository.findById(1L)).thenReturn(Optional.of(testProject));
-        when(projectRepository.existsByKey("TEST")).thenReturn(true);
         when(projectRepository.save(any(Project.class))).thenReturn(testProject);
 
         Project result = projectService.updateProject(testProject);
