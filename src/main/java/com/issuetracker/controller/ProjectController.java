@@ -3,6 +3,7 @@ package com.issuetracker.controller;
 import com.issuetracker.dto.CreateProjectRequest;
 import com.issuetracker.dto.ProjectDTO;
 import com.issuetracker.exception.ResourceNotFoundException;
+import com.issuetracker.mapper.ProjectMapper;
 import com.issuetracker.model.Project;
 import com.issuetracker.service.ProjectService;
 import jakarta.validation.Valid;
@@ -20,11 +21,12 @@ import java.util.stream.Collectors;
 public class ProjectController {
 
     private final ProjectService projectService;
+    private final ProjectMapper projectMapper;
 
     @GetMapping
     public ResponseEntity<List<ProjectDTO>> getAllProjects() {
         List<ProjectDTO> projects = projectService.getAllProjects().stream()
-                .map(this::toDTO)
+                .map(projectMapper::toDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(projects);
     }
@@ -32,14 +34,14 @@ public class ProjectController {
     @GetMapping("/{id}")
     public ResponseEntity<ProjectDTO> getProjectById(@PathVariable Long id) {
         return projectService.getProjectById(id)
-                .map(project -> ResponseEntity.ok(toDTO(project)))
+                .map(project -> ResponseEntity.ok(projectMapper.toDTO(project)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping("/key/{key}")
     public ResponseEntity<ProjectDTO> getProjectByKey(@PathVariable String key) {
         return projectService.getProjectByKey(key)
-                .map(project -> ResponseEntity.ok(toDTO(project)))
+                .map(project -> ResponseEntity.ok(projectMapper.toDTO(project)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -57,7 +59,7 @@ public class ProjectController {
         if (request.getLeadId() != null) {
             savedProject = projectService.assignLeadToProject(savedProject.getId(), request.getLeadId());
         }
-        return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(savedProject));
+        return ResponseEntity.status(HttpStatus.CREATED).body(projectMapper.toDTO(savedProject));
     }
 
     @PutMapping("/{id}")
@@ -76,7 +78,7 @@ public class ProjectController {
         if (request.getLeadId() != null) {
             updatedProject = projectService.assignLeadToProject(updatedProject.getId(), request.getLeadId());
         }
-        return ResponseEntity.ok(toDTO(updatedProject));
+        return ResponseEntity.ok(projectMapper.toDTO(updatedProject));
     }
 
     @DeleteMapping("/{id}")
@@ -90,7 +92,7 @@ public class ProjectController {
             @PathVariable Long projectId,
             @PathVariable Long teamId) {
         Project project = projectService.assignTeamToProject(projectId, teamId);
-        return ResponseEntity.ok(toDTO(project));
+        return ResponseEntity.ok(projectMapper.toDTO(project));
     }
 
     @DeleteMapping("/{projectId}/team")
@@ -99,7 +101,7 @@ public class ProjectController {
                 .orElseThrow(() -> new RuntimeException("Project not found"));
         project.setTeam(null);
         Project updatedProject = projectService.updateProject(project);
-        return ResponseEntity.ok(toDTO(updatedProject));
+        return ResponseEntity.ok(projectMapper.toDTO(updatedProject));
     }
 
     @PostMapping("/{projectId}/lead/{userId}")
@@ -107,7 +109,7 @@ public class ProjectController {
             @PathVariable Long projectId,
             @PathVariable Long userId) {
         Project project = projectService.assignLeadToProject(projectId, userId);
-        return ResponseEntity.ok(toDTO(project));
+        return ResponseEntity.ok(projectMapper.toDTO(project));
     }
 
     @DeleteMapping("/{projectId}/lead")
@@ -116,13 +118,13 @@ public class ProjectController {
                 .orElseThrow(() -> new RuntimeException("Project not found"));
         project.setLead(null);
         Project updatedProject = projectService.updateProject(project);
-        return ResponseEntity.ok(toDTO(updatedProject));
+        return ResponseEntity.ok(projectMapper.toDTO(updatedProject));
     }
 
     @GetMapping("/team/{teamId}")
     public ResponseEntity<List<ProjectDTO>> getProjectsByTeam(@PathVariable Long teamId) {
         List<ProjectDTO> projects = projectService.getProjectsByTeam(teamId).stream()
-                .map(this::toDTO)
+                .map(projectMapper::toDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(projects);
     }
@@ -130,23 +132,8 @@ public class ProjectController {
     @GetMapping("/lead/{userId}")
     public ResponseEntity<List<ProjectDTO>> getProjectsByLead(@PathVariable Long userId) {
         List<ProjectDTO> projects = projectService.getProjectsByLead(userId).stream()
-                .map(this::toDTO)
+                .map(projectMapper::toDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(projects);
-    }
-
-    private ProjectDTO toDTO(Project project) {
-        return ProjectDTO.builder()
-                .id(project.getId())
-                .name(project.getName())
-                .key(project.getKey())
-                .description(project.getDescription())
-                .teamId(project.getTeam() != null ? project.getTeam().getId() : null)
-                .teamName(project.getTeam() != null ? project.getTeam().getName() : null)
-                .leadId(project.getLead() != null ? project.getLead().getId() : null)
-                .leadUsername(project.getLead() != null ? project.getLead().getUsername() : null)
-                .createdAt(project.getCreatedAt())
-                .updatedAt(project.getUpdatedAt())
-                .build();
     }
 }

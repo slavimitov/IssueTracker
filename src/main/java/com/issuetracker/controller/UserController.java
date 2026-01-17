@@ -3,6 +3,8 @@ package com.issuetracker.controller;
 import com.issuetracker.dto.CreateUserRequest;
 import com.issuetracker.dto.RoleDTO;
 import com.issuetracker.dto.UserDTO;
+import com.issuetracker.mapper.RoleMapper;
+import com.issuetracker.mapper.UserMapper;
 import com.issuetracker.model.User;
 import com.issuetracker.service.RoleService;
 import com.issuetracker.service.UserService;
@@ -22,11 +24,21 @@ public class UserController {
 
     private final UserService userService;
     private final RoleService roleService;
+    private final UserMapper userMapper;
+    private final RoleMapper roleMapper;
 
     @GetMapping
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         List<UserDTO> users = userService.getAllUsers().stream()
-                .map(this::toDTO)
+                .map(userMapper::toDTO)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(users);
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<List<UserDTO>> searchUsers(@RequestParam(required = false) String query) {
+        List<UserDTO> users = userService.searchUsers(query).stream()
+                .map(userMapper::toDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(users);
     }
@@ -34,7 +46,7 @@ public class UserController {
     @GetMapping("/{id}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long id) {
         return userService.getUserById(id)
-                .map(user -> ResponseEntity.ok(toDTO(user)))
+                .map(user -> ResponseEntity.ok(userMapper.toDTO(user)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -48,7 +60,7 @@ public class UserController {
                 .lastName(request.getLastName())
                 .build();
         User savedUser = userService.createUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(savedUser));
+        return ResponseEntity.status(HttpStatus.CREATED).body(userMapper.toDTO(savedUser));
     }
 
     @DeleteMapping("/{id}")
@@ -60,38 +72,20 @@ public class UserController {
     @PostMapping("/{userId}/roles/{roleId}")
     public ResponseEntity<UserDTO> assignRole(@PathVariable Long userId, @PathVariable Long roleId) {
         User user = userService.assignRoleToUser(userId, roleId);
-        return ResponseEntity.ok(toDTO(user));
+        return ResponseEntity.ok(userMapper.toDTO(user));
     }
 
     @DeleteMapping("/{userId}/roles/{roleId}")
     public ResponseEntity<UserDTO> removeRole(@PathVariable Long userId, @PathVariable Long roleId) {
         User user = userService.removeRoleFromUser(userId, roleId);
-        return ResponseEntity.ok(toDTO(user));
+        return ResponseEntity.ok(userMapper.toDTO(user));
     }
 
     @GetMapping("/roles")
     public ResponseEntity<List<RoleDTO>> getAllRoles() {
         List<RoleDTO> roles = roleService.getAllRoles().stream()
-                .map(role -> RoleDTO.builder()
-                        .id(role.getId())
-                        .name(role.getName())
-                        .build())
+                .map(roleMapper::toDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(roles);
-    }
-
-    private UserDTO toDTO(User user) {
-        return UserDTO.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .active(user.getActive())
-                .roles(user.getRoles().stream()
-                        .map(role -> role.getName())
-                        .collect(Collectors.toSet()))
-                .createdAt(user.getCreatedAt())
-                .build();
     }
 }

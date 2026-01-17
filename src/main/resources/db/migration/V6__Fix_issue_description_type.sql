@@ -1,0 +1,2 @@
+ALTER TABLE issue
+ALTER COLUMN description TYPE TEXT;

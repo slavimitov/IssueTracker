@@ -5,6 +5,7 @@ import com.issuetracker.model.Issue;
 import com.issuetracker.model.Issue.IssuePriority;
 import com.issuetracker.model.Issue.IssueStatus;
 import com.issuetracker.service.IssueService;
+import com.issuetracker.service.UserService;
 import com.issuetracker.dto.CreateIssueRequest;
 import com.issuetracker.dto.IssueDTO;
 import com.issuetracker.mapper.IssueCommentMapper;
@@ -31,6 +32,9 @@ class IssueControllerTest {
 
     @MockBean
     private IssueService issueService;
+
+    @MockBean
+    private UserService userService;
 
     @MockBean
     private IssueMapper issueMapper;

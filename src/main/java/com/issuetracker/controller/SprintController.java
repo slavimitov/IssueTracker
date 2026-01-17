@@ -3,6 +3,7 @@ package com.issuetracker.controller;
 import com.issuetracker.dto.CreateSprintRequest;
 import com.issuetracker.dto.SprintDTO;
 import com.issuetracker.exception.ResourceNotFoundException;
+import com.issuetracker.mapper.SprintMapper;
 import com.issuetracker.model.Project;
 import com.issuetracker.model.Sprint;
 import com.issuetracker.service.SprintService;
@@ -21,11 +22,12 @@ import java.util.stream.Collectors;
 public class SprintController {
 
     private final SprintService sprintService;
+    private final SprintMapper sprintMapper;
 
     @GetMapping
     public ResponseEntity<List<SprintDTO>> getAllSprints() {
         List<SprintDTO> sprints = sprintService.getAllSprints().stream()
-                .map(this::toDTO)
+                .map(sprintMapper::toDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(sprints);
     }
@@ -33,7 +35,7 @@ public class SprintController {
     @GetMapping("/{id}")
     public ResponseEntity<SprintDTO> getSprintById(@PathVariable Long id) {
         return sprintService.getSprintById(id)
-                .map(sprint -> ResponseEntity.ok(toDTO(sprint)))
+                .map(sprint -> ResponseEntity.ok(sprintMapper.toDTO(sprint)))
                 .orElse(ResponseEntity.notFound().build());
     }
 
@@ -49,7 +51,7 @@ public class SprintController {
                 .project(project)
                 .build();
         Sprint savedSprint = sprintService.createSprint(sprint);
-        return ResponseEntity.status(HttpStatus.CREATED).body(toDTO(savedSprint));
+        return ResponseEntity.status(HttpStatus.CREATED).body(sprintMapper.toDTO(savedSprint));
     }
 
     @PutMapping("/{id}")
@@ -66,7 +68,7 @@ public class SprintController {
         sprint.setEndDate(request.getEndDate());
         sprint.setProject(project);
         Sprint updatedSprint = sprintService.updateSprint(sprint);
-        return ResponseEntity.ok(toDTO(updatedSprint));
+        return ResponseEntity.ok(sprintMapper.toDTO(updatedSprint));
     }
 
     @DeleteMapping("/{id}")
@@ -78,7 +80,7 @@ public class SprintController {
     @GetMapping("/project/{projectId}")
     public ResponseEntity<List<SprintDTO>> getSprintsByProject(@PathVariable Long projectId) {
         List<SprintDTO> sprints = sprintService.getSprintsByProject(projectId).stream()
-                .map(this::toDTO)
+                .map(sprintMapper::toDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(sprints);
     }
@@ -86,22 +88,8 @@ public class SprintController {
     @GetMapping("/project/{projectId}/active")
     public ResponseEntity<List<SprintDTO>> getActiveSprintsByProject(@PathVariable Long projectId) {
         List<SprintDTO> sprints = sprintService.getActiveSprintsByProject(projectId).stream()
-                .map(this::toDTO)
+                .map(sprintMapper::toDTO)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(sprints);
-    }
-
-    private SprintDTO toDTO(Sprint sprint) {
-        return SprintDTO.builder()
-                .id(sprint.getId())
-                .name(sprint.getName())
-                .startDate(sprint.getStartDate())
-                .endDate(sprint.getEndDate())
-                .projectId(sprint.getProject().getId())
-                .projectName(sprint.getProject().getName())
-                .projectKey(sprint.getProject().getKey())
-                .createdAt(sprint.getCreatedAt())
-                .updatedAt(sprint.getUpdatedAt())
-                .build();
     }
 }

@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 
+@SuppressWarnings("null")
 @Service
 @RequiredArgsConstructor
 @Transactional
@@ -77,5 +78,13 @@ public class UserService {
     @Transactional(readOnly = true)
     public boolean existsByEmail(String email) {
         return userRepository.existsByEmail(email);
+    }
+
+    @Transactional(readOnly = true)
+    public List<User> searchUsers(String query) {
+        if (query == null || query.isBlank()) {
+            return userRepository.findAll();
+        }
+        return userRepository.searchByUsernameOrEmail(query);
     }
 }

@@ -14,8 +14,8 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
     // Custom query for searching issues by project, status, and text (title or description)
     @Query("SELECT i FROM Issue i WHERE i.project.id = :projectId " +
            "AND (:status IS NULL OR i.status = :status) " +
-           "AND (:text IS NULL OR LOWER(i.title) LIKE LOWER(CONCAT('%', :text, '%')) " +
-           "OR LOWER(i.description) LIKE LOWER(CONCAT('%', :text, '%')))")
+           "AND (:text = '' OR LOWER(i.title) LIKE LOWER(CONCAT('%', :text, '%')) " +
+           "OR LOWER(CAST(i.description AS string)) LIKE LOWER(CONCAT('%', :text, '%')))")
     List<Issue> searchIssues(@Param("projectId") Long projectId,
                              @Param("status") IssueStatus status,
                              @Param("text") String text);
@@ -26,8 +26,7 @@ public interface IssueRepository extends JpaRepository<Issue, Long> {
            "FROM Issue i " +
            "WHERE i.status = 'DONE' " +
            "AND i.assignee IS NOT NULL " +
-           "AND (:startDate IS NULL OR i.createdAt >= :startDate) " +
-           "AND (:endDate IS NULL OR i.createdAt <= :endDate) " +
+           "AND i.createdAt BETWEEN :startDate AND :endDate " +
            "GROUP BY i.assignee.username " +
            "ORDER BY closedCount DESC " +
            "LIMIT 5")

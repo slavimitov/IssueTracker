@@ -2,8 +2,12 @@ package com.issuetracker.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.issuetracker.dto.CreateUserRequest;
+import com.issuetracker.mapper.RoleMapper;
+import com.issuetracker.mapper.UserMapper;
 import com.issuetracker.model.Role;
 import com.issuetracker.model.User;
+import com.issuetracker.dto.RoleDTO;
+import com.issuetracker.dto.UserDTO;
 import com.issuetracker.service.RoleService;
 import com.issuetracker.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,6 +29,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@SuppressWarnings({"null", "removal"})
 @WebMvcTest(UserController.class)
 class UserControllerTest {
 
@@ -40,8 +45,16 @@ class UserControllerTest {
     @MockBean
     private RoleService roleService;
 
+    @MockBean
+    private UserMapper userMapper;
+
+    @MockBean
+    private RoleMapper roleMapper;
+
     private User testUser;
     private Role developerRole;
+    private UserDTO testUserDTO;
+    private RoleDTO developerRoleDTO;
 
     @BeforeEach
     void setUp() {
@@ -60,11 +73,27 @@ class UserControllerTest {
                 .active(true)
                 .roles(new HashSet<>())
                 .build();
+
+        testUserDTO = UserDTO.builder()
+                .id(1L)
+                .username("testuser")
+                .email("test@example.com")
+                .firstName("Test")
+                .lastName("User")
+                .active(true)
+                .roles(new HashSet<>())
+                .build();
+
+        developerRoleDTO = RoleDTO.builder()
+                .id(1L)
+                .name("DEVELOPER")
+                .build();
     }
 
     @Test
     void getAllUsers_ShouldReturnUserList() throws Exception {
         when(userService.getAllUsers()).thenReturn(Arrays.asList(testUser));
+        when(userMapper.toDTO(any(User.class))).thenReturn(testUserDTO);
 
         mockMvc.perform(get("/api/users"))
                 .andExpect(status().isOk())
@@ -82,8 +111,29 @@ class UserControllerTest {
     }
 
     @Test
+    void searchUsers_ShouldReturnUserList() throws Exception {
+        when(userService.searchUsers("test")).thenReturn(Arrays.asList(testUser));
+        when(userMapper.toDTO(any(User.class))).thenReturn(testUserDTO);
+
+        mockMvc.perform(get("/api/users/search").param("query", "test"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].username").value("testuser"));
+    }
+
+    @Test
+    void searchUsers_WithBlankQuery_ShouldReturnAllUsers() throws Exception {
+        when(userService.searchUsers("")).thenReturn(Arrays.asList(testUser));
+        when(userMapper.toDTO(any(User.class))).thenReturn(testUserDTO);
+
+        mockMvc.perform(get("/api/users/search").param("query", ""))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].username").value("testuser"));
+    }
+
+    @Test
     void getUserById_WhenExists_ShouldReturnUser() throws Exception {
         when(userService.getUserById(1L)).thenReturn(Optional.of(testUser));
+        when(userMapper.toDTO(any(User.class))).thenReturn(testUserDTO);
 
         mockMvc.perform(get("/api/users/1"))
                 .andExpect(status().isOk())
@@ -120,6 +170,11 @@ class UserControllerTest {
                 .build();
 
         when(userService.createUser(any(User.class))).thenReturn(savedUser);
+        when(userMapper.toDTO(any(User.class))).thenReturn(UserDTO.builder()
+                .id(2L)
+                .username("newuser")
+                .email("new@example.com")
+                .build());
 
         mockMvc.perform(post("/api/users")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -146,6 +201,11 @@ class UserControllerTest {
         testUser.setRoles(roles);
 
         when(userService.assignRoleToUser(eq(1L), eq(1L))).thenReturn(testUser);
+        when(userMapper.toDTO(any(User.class))).thenReturn(UserDTO.builder()
+                .id(1L)
+                .username("testuser")
+                .roles(Set.of("DEVELOPER"))
+                .build());
 
         mockMvc.perform(post("/api/users/1/roles/1"))
                 .andExpect(status().isOk())
@@ -157,6 +217,7 @@ class UserControllerTest {
     @Test
     void removeRoleFromUser_ShouldReturnUpdatedUser() throws Exception {
         when(userService.removeRoleFromUser(eq(1L), eq(1L))).thenReturn(testUser);
+        when(userMapper.toDTO(any(User.class))).thenReturn(testUserDTO);
 
         mockMvc.perform(delete("/api/users/1/roles/1"))
                 .andExpect(status().isOk())
@@ -167,6 +228,8 @@ class UserControllerTest {
     void getAllRoles_ShouldReturnRoleList() throws Exception {
         Role adminRole = Role.builder().id(2L).name("ADMIN").build();
         when(roleService.getAllRoles()).thenReturn(Arrays.asList(developerRole, adminRole));
+        when(roleMapper.toDTO(developerRole)).thenReturn(developerRoleDTO);
+        when(roleMapper.toDTO(adminRole)).thenReturn(RoleDTO.builder().id(2L).name("ADMIN").build());
 
         mockMvc.perform(get("/api/users/roles"))
                 .andExpect(status().isOk())

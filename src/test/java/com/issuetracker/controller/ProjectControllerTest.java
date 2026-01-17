@@ -2,6 +2,8 @@ package com.issuetracker.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.issuetracker.dto.CreateProjectRequest;
+import com.issuetracker.dto.ProjectDTO;
+import com.issuetracker.mapper.ProjectMapper;
 import com.issuetracker.model.Project;
 import com.issuetracker.model.Team;
 import com.issuetracker.model.User;
@@ -22,6 +24,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
+@SuppressWarnings({"null", "removal"})
 @WebMvcTest(ProjectController.class)
 class ProjectControllerTest {
 
@@ -33,6 +36,9 @@ class ProjectControllerTest {
 
     @MockBean
     private ProjectService projectService;
+
+    @MockBean
+    private ProjectMapper projectMapper;
 
     @Test
     void getAllProjects_ShouldReturnProjectList() throws Exception {
@@ -46,6 +52,11 @@ class ProjectControllerTest {
                 .build();
 
         when(projectService.getAllProjects()).thenReturn(Arrays.asList(project));
+        when(projectMapper.toDTO(any(Project.class))).thenReturn(ProjectDTO.builder()
+                .id(1L)
+                .name("Test Project")
+                .key("TEST")
+                .build());
 
         mockMvc.perform(get("/api/projects"))
                 .andExpect(status().isOk())
@@ -65,6 +76,11 @@ class ProjectControllerTest {
                 .build();
 
         when(projectService.getProjectById(1L)).thenReturn(Optional.of(project));
+        when(projectMapper.toDTO(any(Project.class))).thenReturn(ProjectDTO.builder()
+                .id(1L)
+                .name("Test Project")
+                .key("TEST")
+                .build());
 
         mockMvc.perform(get("/api/projects/1"))
                 .andExpect(status().isOk())
@@ -92,6 +108,11 @@ class ProjectControllerTest {
                 .build();
 
         when(projectService.getProjectByKey("TEST")).thenReturn(Optional.of(project));
+        when(projectMapper.toDTO(any(Project.class))).thenReturn(ProjectDTO.builder()
+                .id(1L)
+                .name("Test Project")
+                .key("TEST")
+                .build());
 
         mockMvc.perform(get("/api/projects/key/TEST"))
                 .andExpect(status().isOk())
@@ -116,6 +137,11 @@ class ProjectControllerTest {
                 .build();
 
         when(projectService.createProject(any(Project.class))).thenReturn(savedProject);
+        when(projectMapper.toDTO(any(Project.class))).thenReturn(ProjectDTO.builder()
+                .id(1L)
+                .name("New Project")
+                .key("NEW")
+                .build());
 
         mockMvc.perform(post("/api/projects")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -163,6 +189,11 @@ class ProjectControllerTest {
 
         when(projectService.getProjectById(1L)).thenReturn(Optional.of(existingProject));
         when(projectService.updateProject(any(Project.class))).thenReturn(updatedProject);
+        when(projectMapper.toDTO(any(Project.class))).thenReturn(ProjectDTO.builder()
+                .id(1L)
+                .name("Updated Project")
+                .key("UPD")
+                .build());
 
         mockMvc.perform(put("/api/projects/1")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -196,6 +227,11 @@ class ProjectControllerTest {
                 .build();
 
         when(projectService.assignTeamToProject(1L, 1L)).thenReturn(project);
+        when(projectMapper.toDTO(any(Project.class))).thenReturn(ProjectDTO.builder()
+                .id(1L)
+                .name("Test Project")
+                .teamId(1L)
+                .build());
 
         mockMvc.perform(post("/api/projects/1/team/1"))
                 .andExpect(status().isOk())
@@ -214,6 +250,11 @@ class ProjectControllerTest {
                 .build();
 
         when(projectService.assignLeadToProject(1L, 1L)).thenReturn(project);
+        when(projectMapper.toDTO(any(Project.class))).thenReturn(ProjectDTO.builder()
+                .id(1L)
+                .name("Test Project")
+                .leadId(1L)
+                .build());
 
         mockMvc.perform(post("/api/projects/1/lead/1"))
                 .andExpect(status().isOk())
@@ -232,6 +273,11 @@ class ProjectControllerTest {
                 .build();
 
         when(projectService.getProjectsByTeam(1L)).thenReturn(Arrays.asList(project));
+        when(projectMapper.toDTO(any(Project.class))).thenReturn(ProjectDTO.builder()
+                .id(1L)
+                .name("Test Project")
+                .teamId(1L)
+                .build());
 
         mockMvc.perform(get("/api/projects/team/1"))
                 .andExpect(status().isOk())
@@ -250,6 +296,11 @@ class ProjectControllerTest {
                 .build();
 
         when(projectService.getProjectsByLead(1L)).thenReturn(Arrays.asList(project));
+        when(projectMapper.toDTO(any(Project.class))).thenReturn(ProjectDTO.builder()
+                .id(1L)
+                .name("Test Project")
+                .leadId(1L)
+                .build());
 
         mockMvc.perform(get("/api/projects/lead/1"))
                 .andExpect(status().isOk())

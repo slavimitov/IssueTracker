@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@SuppressWarnings("null")
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
@@ -243,5 +244,25 @@ class UserServiceTest {
         boolean result = userService.existsByEmail("unknown@example.com");
 
         assertFalse(result);
+    }
+
+    @Test
+    void searchUsers_WithQuery_ShouldReturnMatches() {
+        when(userRepository.searchByUsernameOrEmail("test")).thenReturn(Arrays.asList(testUser));
+
+        List<User> result = userService.searchUsers("test");
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+
+    @Test
+    void searchUsers_WithBlankQuery_ShouldReturnAllUsers() {
+        when(userRepository.findAll()).thenReturn(Arrays.asList(testUser));
+
+        List<User> result = userService.searchUsers(" ");
+
+        assertNotNull(result);
+        assertEquals(1, result.size());
     }
 }

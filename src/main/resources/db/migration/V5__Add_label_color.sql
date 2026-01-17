@@ -1,0 +1,2 @@
+ALTER TABLE label
+ADD COLUMN color VARCHAR(30);

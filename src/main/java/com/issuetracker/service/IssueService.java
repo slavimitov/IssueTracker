@@ -99,7 +99,8 @@ public class IssueService {
     }
 
     public List<Issue> searchIssues(Long projectId, IssueStatus status, String text) {
-        return issueRepository.searchIssues(projectId, status, text);
+        String searchText = text == null ? "" : text;
+        return issueRepository.searchIssues(projectId, status, searchText);
     }
     
     public List<Object[]> getTopPerformers() {
